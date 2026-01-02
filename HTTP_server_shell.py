@@ -74,7 +74,7 @@ CONTENT_TYPES = {
 }
 
 
-def get_file_data(file_name):
+def get_file_data(file_name: str):
     """
     Get data from file.
     :param file_name: the name of the file.
@@ -88,7 +88,7 @@ def get_file_data(file_name):
         return None
 
 
-def get_content_type(file_name):
+def get_content_type(file_name: str) -> str:
     """
     Get content type.
     :param file_name: the name of the file.
@@ -123,7 +123,7 @@ def build_http_header(status_code, content_type=None, content_length=None, extra
     return http_header
 
 
-def handle_client_request(resource, client_socket):
+def handle_client_request(resource: str, client_socket: socket.socket) -> None:
     """
     Check the resource, generate HTTP response and send
     to client
@@ -183,7 +183,7 @@ def handle_client_request(resource, client_socket):
     client_socket.sendall(http_response)
 
 
-def validate_http_request(request):
+def validate_http_request(request: str) -> tuple:
     """
     Check if request is a valid HTTP request and returns true or false and
     the requested URL
@@ -222,7 +222,10 @@ def handle_client(client_socket):
         except socket.timeout:
             logging.info("Socket timeout")
             break
-        except Exception as e: #this may happen because of the new page that I'm adding for 404,500, etc.
+        except ConnectionAbortedError: #this may happen because of the new page that I added for 404,500, etc.
+            logging.info("Client closed connection")
+            break
+        except Exception as e:
             logging.info(f"Error: {e}")
             break
 
