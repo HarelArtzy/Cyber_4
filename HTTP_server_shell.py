@@ -76,9 +76,9 @@ CONTENT_TYPES = {
 
 def get_file_data(file_name: str):
     """
-    Get data from file.
-    :param file_name: the name of the file.
-    :return: the file data in bytes, or None if error.
+    Get data from file
+    :param file_name: the name of the file
+    :return: the file data in bytes, or None if error
     """
     try:
         with open(file_name, "rb") as f:
@@ -90,8 +90,8 @@ def get_file_data(file_name: str):
 
 def get_content_type(file_name: str) -> str:
     """
-    Get content type.
-    :param file_name: the name of the file.
+    Get content type
+    :param file_name: the name of the file
     """
     if "." in file_name:
         ext = file_name.rsplit(".", 1)[1].lower()
@@ -103,11 +103,11 @@ def get_content_type(file_name: str) -> str:
 
 def build_http_header(status_code, content_type=None, content_length=None, extra_headers=None):
     """
-    Build HTTP header.
+    Build HTTP header
     :param status_code: the HTTP status code (400/404/403...)
     :param content_type: txt, jpg, png, ...
     :param content_length: length of data in bytes
-    :param extra_headers: lines that are not in every header like Location.
+    :param extra_headers: lines that are not in every header like Location
     :return:
     """
     lines = [f"HTTP/1.1 {status_code}"]
@@ -222,7 +222,7 @@ def handle_client(client_socket):
         except socket.timeout:
             logging.info("Socket timeout")
             break
-        except ConnectionAbortedError: #this may happen because of the new page that I added for 404,500, etc.
+        except ConnectionAbortedError:  #this may happen because of the new page that I added for 404,500, etc.
             logging.info("Client closed connection")
             break
         except Exception as e:
@@ -255,7 +255,7 @@ def handle_client(client_socket):
 
 def main():
     """
-    The main function initiating the server shell.
+    The main function initiating the server shell
     :return:
     """
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
