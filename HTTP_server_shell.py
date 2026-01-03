@@ -175,7 +175,7 @@ def handle_client_request(resource: str, client_socket: socket.socket) -> None:
 
         content_type = get_content_type(full_path)
         logging.info(
-            f"Responding 200: {full_path},"
+            f"Responding 200: {full_path}, "
             f"Content-Type={content_type}, Content-Length={len(data)}"
         )
 
@@ -319,5 +319,6 @@ if __name__ == "__main__":
     assert validate_http_request("GETT / HTTP/1.1\r\n\r\n")[0] is False
 
     print("All asserts passed")
+
 
     main()
