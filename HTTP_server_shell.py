@@ -1,8 +1,8 @@
 """
  Program: HTTP Server Shell
  Author: Harel Teva Artzy
- Description: A http protocol server shell for an existing site template, handles client requests from browser and infinite clients,
-              one after the other.
+ Description: A http protocol server shell for an existing site template,
+              handles client requests from browser and infinite clients, one after the other.
 """
 
 import socket
@@ -78,7 +78,7 @@ def get_file_data(file_name: str):
     """
     Get data from file
     :param file_name: the name of the file
-    :return: the file data in bytes, or None if error
+    :return: data from file in bytes, or None if error
     """
     try:
         with open(file_name, "rb") as f:
@@ -151,35 +151,38 @@ def handle_client_request(resource: str, client_socket: socket.socket) -> None:
             extra_headers=extra_headers
         )
 
-        client_socket.send(http_header.encode() + body)
+        http_response = http_header.encode() + body
         logging.info(f"Responding: {status}")
-        return
 
-    if resource == "/" or resource == "":
-        relative_path = DEFAULT_URL
     else:
-        relative_path = resource.lstrip("/")
-        relative_path = relative_path.split("?", 1)[0]
+        if resource == "/" or resource == "":
+            relative_path = DEFAULT_URL
+        else:
+            relative_path = resource.lstrip("/")
+            relative_path = relative_path.split("?", 1)[0]
 
-    full_path = os.path.join(WEB_ROOT, relative_path)
-    logging.info(f"Path: {full_path}")
+        full_path = os.path.join(WEB_ROOT, relative_path)
+        logging.info(f"Path: {full_path}")
 
-    if not os.path.isfile(full_path):
-        handle_client_request("/404", client_socket)
-        return
+        if not os.path.isfile(full_path):
+            handle_client_request("/404", client_socket)
+            return
 
-    data = get_file_data(full_path)
-    if data is None:
-        handle_client_request("/error", client_socket)
-        return
+        data = get_file_data(full_path)
+        if data is None:
+            handle_client_request("/error", client_socket)
+            return
 
-    content_type = get_content_type(full_path)
-    logging.info(f"Responding 200: {full_path}, Content-Type={content_type}, Content-Length={len(data)}")
+        content_type = get_content_type(full_path)
+        logging.info(
+            f"Responding 200: {full_path},"
+            f"Content-Type={content_type}, Content-Length={len(data)}"
+        )
 
-    http_header = build_http_header("200 OK",
-                                    content_type=content_type,
-                                    content_length=len(data))
-    http_response = http_header.encode() + data
+        http_header = build_http_header("200 OK",
+                                        content_type=content_type,
+                                        content_length=len(data))
+        http_response = http_header.encode() + data
     client_socket.sendall(http_response)
 
 
@@ -191,6 +194,9 @@ def validate_http_request(request: str) -> tuple:
     :return: a tuple of (True/False, requested resource)
     """
     if not request:
+        return False, ""
+
+    if "\r\n\r\n" not in request:
         return False, ""
 
     lines = request.split("\r\n")
@@ -219,12 +225,16 @@ def handle_client(client_socket):
     while True:
         try:
             client_request = client_socket.recv(4096).decode()
+
         except socket.timeout:
             logging.info("Socket timeout")
             break
-        except ConnectionAbortedError:  #this may happen because of the new page that I added for 404,500, etc.
+
+        # this may happen because of the new page that I added for 404,500, etc.
+        except ConnectionAbortedError:
             logging.info("Client closed connection")
             break
+
         except Exception as e:
             logging.info(f"Error: {e}")
             break
@@ -243,13 +253,7 @@ def handle_client(client_socket):
             print('Got a valid HTTP request')
             handle_client_request(resource, client_socket)
         else:
-            logging.info("Invalid HTTP request")
-            print('Error: Not a valid HTTP request')
-            body = b"<html><body><h1>400 Bad Request</h1></body></html>"
-            http_header = build_http_header("400 Bad Request",
-                                            content_type="text/html;charset=utf-8",
-                                            content_length=len(body))
-            client_socket.send(http_header.encode() + body)
+            handle_client_request("/400", client_socket)
             break
 
 
@@ -287,7 +291,7 @@ def main():
 
 if __name__ == "__main__":
     logging.basicConfig(
-        filename= 'server.log',
+        filename='server.log',
         level=logging.INFO,
         filemode="w",
         format="%(asctime)s %(levelname)s %(message)s"
@@ -298,6 +302,12 @@ if __name__ == "__main__":
     assert CONTENT_TYPES.get("png") == "image/png"
     assert get_content_type("a.html") == CONTENT_TYPES["html"]
     assert get_content_type("a.JPG") == CONTENT_TYPES["jpg"]
+    assert get_content_type("a.css") == "text/css"
+    assert get_content_type("a.js") == "text/javascript; charset=UTF-8"
+    assert get_content_type("a.txt") == "text/plain"
+    assert get_content_type("a.ico") == "image/x-icon"
+    assert get_content_type("a.gif") == "image/jpeg"
+    assert get_content_type("a.png") == "image/png"
 
     header = build_http_header("200 OK", "text/html", 10)
     assert header.startswith("HTTP/1.1 ")
