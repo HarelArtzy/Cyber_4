@@ -199,6 +199,9 @@ def validate_http_request(request: str) -> tuple:
     if "\r\n\r\n" not in request:
         return False, ""
 
+    if "\r\n\r\n" not in request:
+        return False, ""
+
     lines = request.split("\r\n")
     request_line = lines[0]
 
